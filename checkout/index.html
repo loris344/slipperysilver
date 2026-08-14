@@ -278,7 +278,7 @@
   .form-field .hint{font-size:.8rem;color:var(--ink-faint);font-weight:500;}
   .form-field input{height:52px;border:2px solid var(--border);border-radius:var(--radius-control);padding:0 14px;background:var(--surface);color:var(--ink);font-size:1rem;}
   .form-field input:focus{border-color:var(--brand);}
-  .form-field input:invalid:not(:placeholder-shown){border-color:var(--error);}
+  .form-field input.touched:invalid{border-color:var(--error);}
 
   .pay-method{display:flex;align-items:center;gap:12px;border:2px solid var(--brand);background:var(--brand-tint);border-radius:var(--radius-control);padding:14px 16px;margin-bottom:20px;font-weight:700;}
   .pay-method .icon{width:22px;height:22px;color:var(--brand);}
@@ -579,6 +579,11 @@
     var val = document.getElementById('promoInput').value.trim();
     var note = document.getElementById('promoNote');
     note.textContent = val ? 'Code non reconnu.' : 'Saisissez un code.';
+  });
+
+  // Only flag a field red after the visitor has actually left it, never on page load
+  document.querySelectorAll('#orderForm input').forEach(function(input){
+    input.addEventListener('blur', function(){ input.classList.add('touched'); });
   });
 
   // Card number formatting
