@@ -376,6 +376,17 @@
 <style>
   body{background:var(--surface-alt);}
   .checkout-shell{padding-block:36px;}
+  header.site{background:var(--band-bg);border-bottom:none;}
+  header.site .logo{color:var(--band-ink);}
+  .promo-code{display:flex;gap:10px;margin-top:20px;}
+  .promo-code input{flex:1;height:48px;border:2px solid var(--border);border-radius:var(--radius-control);padding:0 14px;background:var(--surface);color:var(--ink);}
+  .promo-code button{height:48px;padding:0 20px;border-radius:var(--radius-control);border:2px solid var(--border);background:var(--surface-alt);color:var(--ink-soft);font-weight:700;cursor:pointer;}
+  .promo-note{margin-top:8px;font-size:.85rem;color:var(--ink-faint);min-height:1.2em;}
+  .order-line .price-col{text-align:right;}
+  .order-line .price-col .was{display:block;font-size:.82rem;color:var(--ink-faint);text-decoration:line-through;}
+  .order-line .price-col .now{display:block;font-weight:700;color:var(--ink);}
+  .order-line .save-tag{display:inline-block;margin-top:4px;font-size:.72rem;font-weight:800;color:var(--sage-strong);background:var(--sage-tint);padding:2px 8px;border-radius:999px;}
+  .order-totals .savings{color:var(--sage-strong);font-weight:700;}
 </style>
 
 <header class="site">
@@ -385,8 +396,8 @@
       Maison Senior
     </a>
     <div class="header-actions">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:18px;height:18px;color:var(--sage-strong);"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-      <span style="font-weight:700;font-size:.92rem;color:var(--sage-strong);">Paiement sécurisé</span>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:18px;height:18px;color:var(--band-accent);"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <span style="font-weight:700;font-size:.92rem;color:var(--band-accent);">Paiement sécurisé</span>
     </div>
   </div>
 </header>
@@ -463,11 +474,25 @@
           <div class="meta">
             <strong>Tapis antidérapant douche &amp; baignoire</strong>
             <span id="summaryVariant">Gris</span> · Qté <span id="summaryQty">1</span>
+            <span class="save-tag" id="saveTag" style="display:none;"></span>
+          </div>
+          <div class="price-col">
+            <span class="was" id="lineWas" style="display:none;"></span>
+            <span class="now" data-total>29,90&nbsp;€</span>
           </div>
         </div>
+
+        <div class="promo-code">
+          <label for="promoInput" class="sr-only">Code de réduction</label>
+          <input type="text" id="promoInput" placeholder="Code de réduction">
+          <button type="button" id="promoBtn">Valider</button>
+        </div>
+        <p class="promo-note" id="promoNote"></p>
+
         <div class="order-totals">
           <div class="row"><span>Sous-total</span><span data-total>29,90&nbsp;€</span></div>
           <div class="row"><span>Livraison</span><span>Offerte</span></div>
+          <div class="row savings" id="savingsRow" style="display:none;"><span>Économies</span><span class="savings" id="savingsAmount"></span></div>
           <div class="row grand"><span>Total</span><span data-total>29,90&nbsp;€</span></div>
         </div>
       </aside>
@@ -508,7 +533,27 @@
 
   function updateTotals(){
     var total = Math.round(qty * unitPrice(qty) * 100) / 100;
+    var original = Math.round(qty * basePrice * 100) / 100;
+    var savings = Math.round((original - total) * 100) / 100;
     document.querySelectorAll('[data-total]').forEach(function(el){ el.textContent = fmt(total); });
+
+    var wasEl = document.getElementById('lineWas');
+    var tagEl = document.getElementById('saveTag');
+    var rowEl = document.getElementById('savingsRow');
+    var amtEl = document.getElementById('savingsAmount');
+    if (savings > 0){
+      wasEl.textContent = fmt(original);
+      wasEl.style.display = '';
+      var pct = qty >= 3 ? '15%' : '10%';
+      tagEl.textContent = '-' + pct + ' (-' + fmt(savings) + ')';
+      tagEl.style.display = '';
+      rowEl.style.display = '';
+      amtEl.textContent = '-' + fmt(savings);
+    } else {
+      wasEl.style.display = 'none';
+      tagEl.style.display = 'none';
+      rowEl.style.display = 'none';
+    }
   }
 
   document.getElementById('summaryVariant').textContent = label;
@@ -516,6 +561,13 @@
   var photoEl = document.getElementById('summaryPhoto');
   photoEl.src = THUMBS[variant] || THUMBS.gris;
   updateTotals();
+
+  // Discount code — honest: we don't have real promo codes yet, so say so plainly
+  document.getElementById('promoBtn').addEventListener('click', function(){
+    var val = document.getElementById('promoInput').value.trim();
+    var note = document.getElementById('promoNote');
+    note.textContent = val ? 'Code non reconnu.' : 'Saisissez un code.';
+  });
 
   // Card number formatting
   var ccnum = document.getElementById('ccnum');
