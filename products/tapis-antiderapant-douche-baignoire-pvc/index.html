@@ -914,7 +914,6 @@
   function updateTotals(){
     var total = Math.round(state.qty * unitPrice(state.qty) * 100) / 100;
     document.querySelectorAll('[data-total]').forEach(function(el){ el.textContent = fmt(total); });
-    document.getElementById('summaryQty').textContent = state.qty;
     document.querySelector('[data-unit-price]').textContent = fmt(state.price);
     var wasEl = document.getElementById('priceWas');
     if (wasEl) wasEl.textContent = fmt(Math.round(state.price * 1.5 * 100) / 100);
@@ -936,14 +935,11 @@
     state.label = btn.dataset.label;
     state.color = btn.dataset.color;
     document.getElementById('variantLabel').textContent = state.label;
-    document.getElementById('summaryVariant').textContent = state.label;
     var photo = document.getElementById('mainPhoto');
     if (photo && btn.dataset.photo){
       photo.src = btn.dataset.photo;
       photo.alt = 'Tapis antidérapant Maison Senior, coloris ' + state.label;
     }
-    var sPhoto = document.getElementById('summaryPhoto');
-    if (sPhoto && btn.dataset.thumb) sPhoto.src = btn.dataset.thumb;
   }
 
   document.querySelectorAll('.size-btn').forEach(function(btn){
