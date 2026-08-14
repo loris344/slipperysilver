@@ -433,7 +433,7 @@
             <div class="form-field"><label for="fname">Prénom</label><input id="fname" name="fname" type="text" autocomplete="given-name" required></div>
             <div class="form-field"><label for="lname">Nom</label><input id="lname" name="lname" type="text" autocomplete="family-name" required></div>
             <div class="form-field"><label for="phone">Téléphone</label><input id="phone" name="phone" type="tel" autocomplete="tel" required><span class="hint">Pour vous prévenir avant la livraison</span></div>
-            <div class="form-field"><label for="email">Email (facultatif)</label><input id="email" name="email" type="email" autocomplete="email"><span class="hint">Pour recevoir votre confirmation de commande</span></div>
+            <div class="form-field"><label for="email">Email</label><input id="email" name="email" type="email" autocomplete="email" required><span class="hint">Pour recevoir votre confirmation de commande</span></div>
           </div>
         </fieldset>
 
@@ -654,9 +654,7 @@
     var email = document.getElementById('email').value.trim();
     var orderNo = 'MS-' + Math.floor(100000 + Math.random()*900000);
     document.getElementById('confirmTitle').textContent = 'Merci ' + (fname || '') + ', votre commande est confirmée !';
-    document.getElementById('confirmDetail').textContent = email
-      ? 'Un récapitulatif de commande a été envoyé à ' + email + '. Livraison estimée le ' + deliveryDate + '.'
-      : 'Un récapitulatif de commande vous sera communiqué par SMS. Livraison estimée le ' + deliveryDate + '.';
+    document.getElementById('confirmDetail').textContent = 'Un récapitulatif de commande a été envoyé à ' + email + '. Livraison estimée le ' + deliveryDate + '.';
     document.getElementById('confirmOrderNo').textContent = 'N° de commande : ' + orderNo;
     saveCart([]);
     document.getElementById('checkoutForm').style.display = 'none';
