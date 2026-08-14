@@ -390,6 +390,7 @@
     </a>
     <div class="header-actions">
       <a href="/" class="btn btn-outline btn-sm">Accueil</a>
+      <a href="/checkout/" class="btn btn-outline btn-sm">Panier<span id="cartCount"></span></a>
       <a class="header-call" href="tel:0767135458">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
         <span>07 67 13 54 58<br><small>Du lundi au samedi, 9h–19h</small></span>
@@ -452,7 +453,7 @@
 
         <div class="promo-banner">
           <strong>Achetez-en plusieurs, économisez</strong>
-          <div class="promo-tiers"><span>-10% dès 2 tapis</span><span>-15% dès 3 tapis</span></div>
+          <div class="promo-tiers"><span>-10% dès 2 tapis</span><span>-20% dès 4 tapis</span></div>
         </div>
 
         <span class="field-label">Couleur : <span class="field-value" id="variantLabel">Gris</span></span>
@@ -882,24 +883,48 @@
   }
 
   function unitPrice(qty){
-    if (qty >= 3) return Math.round(state.price * 0.85 * 100) / 100;
+    if (qty >= 4) return Math.round(state.price * 0.80 * 100) / 100;
     if (qty >= 2) return Math.round(state.price * 0.90 * 100) / 100;
     return state.price;
+  }
+
+  // Cart — persisted in localStorage, shared with the checkout page
+  function getCart(){
+    try { return JSON.parse(localStorage.getItem('ms_cart') || '[]'); } catch(e){ return []; }
+  }
+  function saveCart(cart){
+    localStorage.setItem('ms_cart', JSON.stringify(cart));
+  }
+  function addToCart(item){
+    var cart = getCart();
+    var existing = cart.find(function(l){ return l.variant === item.variant && l.price === item.price; });
+    if (existing){ existing.qty += item.qty; } else { cart.push(item); }
+    saveCart(cart);
+    return cart;
+  }
+  function cartCount(cart){
+    return cart.reduce(function(sum, l){ return sum + l.qty; }, 0);
+  }
+  function updateCartBadge(){
+    var n = cartCount(getCart());
+    var badge = document.getElementById('cartCount');
+    badge.textContent = n > 0 ? ' (' + n + ')' : '';
   }
 
   function updateTotals(){
     var total = Math.round(state.qty * unitPrice(state.qty) * 100) / 100;
     document.querySelectorAll('[data-total]').forEach(function(el){ el.textContent = fmt(total); });
+    document.getElementById('summaryQty').textContent = state.qty;
     document.querySelector('[data-unit-price]').textContent = fmt(state.price);
     var wasEl = document.getElementById('priceWas');
     if (wasEl) wasEl.textContent = fmt(Math.round(state.price * 1.5 * 100) / 100);
     var hint = document.getElementById('tierHint');
     if (state.qty === 1){
       hint.textContent = 'Ajoutez-en un 2ᵉ pour économiser 10%';
-    } else if (state.qty === 2){
-      hint.textContent = 'Ajoutez-en un 3ᵉ pour économiser 15%';
+    } else if (state.qty < 4){
+      hint.textContent = 'Ajoutez-en jusqu\'à 4 pour économiser 20%';
     } else {
-      hint.textContent = '✓ Réduction de 15% appliquée';
+      hint.textContent = '✓ Réduction de 20% appliquée';
     }
   }
 
@@ -911,11 +936,14 @@
     state.label = btn.dataset.label;
     state.color = btn.dataset.color;
     document.getElementById('variantLabel').textContent = state.label;
+    document.getElementById('summaryVariant').textContent = state.label;
     var photo = document.getElementById('mainPhoto');
     if (photo && btn.dataset.photo){
       photo.src = btn.dataset.photo;
       photo.alt = 'Tapis antidérapant Maison Senior, coloris ' + state.label;
     }
+    var sPhoto = document.getElementById('summaryPhoto');
+    if (sPhoto && btn.dataset.thumb) sPhoto.src = btn.dataset.thumb;
   }
 
   document.querySelectorAll('.size-btn').forEach(function(btn){
@@ -949,19 +977,19 @@
 
   var toast = document.getElementById('cartToast');
   document.getElementById('addToCartBtn').addEventListener('click', function(){
-    toast.textContent = '✓ Ajouté au panier';
+    var cart = addToCart({ variant: state.variant, label: state.label, price: state.price, qty: state.qty });
+    var n = cartCount(cart);
+    toast.textContent = '✓ Ajouté au panier (' + n + (n > 1 ? ' articles' : ' article') + ')';
     setTimeout(function(){ toast.textContent = ''; }, 3000);
+    updateCartBadge();
   });
 
   document.getElementById('buyNowBtn').addEventListener('click', function(){
-    var params = new URLSearchParams({
-      variant: state.variant,
-      label: state.label,
-      qty: state.qty,
-      price: state.price
-    });
-    location.href = '/checkout/?' + params.toString();
+    addToCart({ variant: state.variant, label: state.label, price: state.price, qty: state.qty });
+    location.href = '/checkout/';
   });
+
+  updateCartBadge();
 
   // Share button — best effort, no error if unsupported in this environment
   var shareBtn = document.getElementById('shareBtn');
